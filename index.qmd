@@ -1,37 +1,15 @@
 ---
-title: "Workshop Exercise: Emissions Data - Table, Map, and Chart"
-format: html
+title: "What is the correlation between happiness and a well run country?"
+format: 
+  dashboard:
+    scrolling: true 
+theme: lux
+author: Priscilla Wang
+
 ---
 
-# Introduction
-
-In this exercise, you will work with a CO2 emissions dataset downloaded from Gapminder and produce a report with three tabs: a data table, a line chart, and a choropleth map. 
-
-The goal is to roughly replicate the [Our World in Data visualization page on consumption-based CO<sub>2</sub> emissions](https://ourworldindata.org/grapher/consumption-co2-emissions?tab=table&time=2000..2022).
-
-Be sure to view that page to get an idea of the final product.
-
-# Setup
-
-- You should have forked and cloned this repository to your local machine.
-
-- Now, create and select a virtual environment in VSCode.
-
-- Install the following packages: 
-  - pandas
-  - plotly
-  - itables
-  - ipykernel
-  - jupyter
-  - country_converter
-
-- Download the data from [Gapminder](https://www.gapminder.org/data/) by selecting: *Environment > Emissions > CO2 Total emissions*, then downloading the CSV file into a `data` folder in your repository.
-
-# Data Import
-
-Run the following code to import the necessary libraries:
-
 ```{python}
+# import libraries
 import pandas as pd
 import numpy as np
 import plotly.express as px
@@ -39,155 +17,333 @@ from itables import show
 import country_converter as coco
 ```
 
-Load in your dataset from gapminder below. View it in your data viewer to get an idea of the structure.
 
 ```{python}
-# Load the data
-emissions = pd.read_csv("DATA PATH HERE")
-```
-
-# Initial Cleaning
-
-In this dataset, some values are given in thousands, with a "k" used to represent the thousands. This will cause problems when we try to make these columns numeric. So we need to clean this. We'll do this for you, but pay close attention as you might need it for your final project.
-
-First, let's see the issue:
-
-```{python}
-emissions.query("country == 'China'")[["country",  "2020", "2021", "2022"]]
-```
-
-Notice the letter "k" at the end of "10.6k" as an example.
-
-We can remove the "k" and multiply those values by 1000 with the following code:
-
-```{python}
-for col in ["2021", "2022"]:
-    has_k = emissions[col].str.contains("k")
-    values = emissions[col].str.replace("k", "")
-    emissions[col] = np.where(has_k, values.astype(float) * 1000, values.astype(float))
-```
-
-And check that it worked:
-
-```{python}
-emissions.query("country == 'China'")[["country",  "2020", "2021", "2022"]]
-```
-
-# Table Section
-
-Our goal is to create a table showing emissions for a few selected years and calculate absolute and relative changes.
-
-1. Subset the data to include `Country`, `2000`, and `2022` columns only.
-2. Calculate an "Absolute Change" column as the difference between 2022 and 2000.
-3. Calculate a "Relative Change" column as the absolute change divided by the 2000 emissions, then multiplied by 100.
-
-```{python}
-# Subset the data to include `country`, `2000`, and `2022` columns only.
-table_df = 
-
-# Calculate absolute change as the difference between 2022 and 2000
-table_df["Absolute Change"] = 
-
-# Calculate relative change as the absolute change divided by the 2000 emissions, then multiplied by 100
-table_df["Relative Change"] = 
-
-# Round to 0 decimal places, and add a % sign to the relative change
-table_df["Relative Change"] = table_df["Relative Change"].round(0).astype(str) + "%"
-```
-
-Now we can display this as an interactive table with itables:
-
-```{python}
-show(table_df)
-```
-
-# Chart Section
-
-Our goal is to create a line chart from 1990 to 2022 for a few selected countries.
-
-1. Melt the original `emissions` dataset so that years become rows.
-2. Filter from 1990 to 2022 only.
-3. Choose 5 countries of your choice.
-4. Create a line chart showing emissions over time for the selected countries with Plotly Express.
-
-```{python}
-# Melt the original `emissions` dataset. Your id_vars should be "country", your var_name should be "year" and your value_name should be "emissions".
-emissions_long = 
-
-# Convert year to numeric using pd.to_numeric
-emissions_long["year"] = 
-
-# Convert emissions to numeric using pd.to_numeric. Here, we also convert dashes to the minus sign
-emissions_long["emissions"] = pd.to_numeric(emissions_long["emissions"].astype(str).str.replace("−", "-"))
-
-# Query for years between 1990 and 2022 (that is 1990, 1991, ..., 2021, 2022)
-emissions_long_1990_2022 = 
-
-# Query for 5 countries (adjust these to any countries you like)
-emissions_long_subset = 
-
-# Create line chart. Year should be on the x-axis, emissions on the y-axis, and color should be by country.
-fig_chart = 
-
+# import data
+happiness = pd.read_csv("./data_final_project/hapiscore_whr.csv")
 ```
 
 
-# Mapping Section
+```{python}
+# import data
+gdp = pd.read_csv("./data_final_project/gdppercapita_us_inflation_adjusted.csv")
+```
 
-This part is done for you.
-
-**Goal:** Create a choropleth map showing global emissions from 1990 to 2022.  
-
-This will be animated by year.
-
-1. Ensure each country has a 3-letter ISO code. We'll use `country_converter` for that.
-2. Create a map with `px.choropleth` and use `animation_frame` to show changes over time.
 
 ```{python}
-# Convert country names to ISO3 codes
-emissions_long_1990_2022["country_code"] = coco.convert(
-    emissions_long_1990_2022["country"], to="ISO3"
+# import data
+development = pd.read_csv("./data_final_project/hdi_human_development_index.csv")
+```
+
+
+```{python}
+# import data
+gini = pd.read_csv("./data_final_project/gini.csv")
+```
+
+
+```{python}
+# import data
+corruption = pd.read_csv("./data_final_project/corruption_perception_index_cpi.csv")
+```
+
+
+
+```{python}
+# Convert country names to ISO3 country codes 
+happiness['country_code'] = coco.convert(names=happiness['country'], to='ISO3', not_found=None)
+
+# Manually fix UAE (United Arab Emirates)
+happiness.loc[happiness['country'] == 'UAE', 'country_code'] = 'ARE'
+```
+
+```{python}
+# Convert country names to ISO3 country codes 
+gdp['country_code'] = coco.convert(names=gdp['country'], to='ISO3', not_found=None)
+
+# Manually fix UAE (United Arab Emirates)
+gdp.loc[gdp['country'] == 'UAE', 'country_code'] = 'ARE'
+```
+
+```{python}
+# Convert country names to ISO3 country codes 
+development['country_code'] = coco.convert(names=development['country'], to='ISO3', not_found=None)
+
+# Manually fix UAE (United Arab Emirates)
+development.loc[gdp['country'] == 'UAE', 'country_code'] = 'ARE'
+```
+
+```{python}
+# Convert country names to ISO3 country codes 
+gini['country_code'] = coco.convert(names=gini['country'], to='ISO3', not_found=None)
+
+# Manually fix UAE (United Arab Emirates)
+gini.loc[gdp['country'] == 'UAE', 'country_code'] = 'ARE'
+```
+
+```{python}
+# Convert country names to ISO3 country codes 
+corruption['country_code'] = coco.convert(names=corruption['country'], to='ISO3', not_found=None)
+
+# Manually fix UAE (United Arab Emirates)
+corruption.loc[corruption['country'] == 'UAE', 'country_code'] = 'ARE'
+```
+
+```{python}
+# Create a new dataframe with country_code, country, and 2023 columns from happiness dataframe
+data_2023 = happiness[['country_code', 'country', '2023']].copy()
+
+# rename column 
+data_2023 = data_2023.rename(columns={'2023': 'happiness_2023'})
+```
+
+```{python}
+# Merge '2023' column from gdp dataframe into data_2023 dataframe by country code
+data_2023 = pd.merge(
+    data_2023,
+    gdp[['country_code', '2023']],
+    on='country_code',
+    how='inner',  # keep only rows with matching country_code in both dataframes
+    suffixes=('', '_gdp')
 )
 
-fig_map = px.choropleth(
-    emissions_long_1990_2022,
+# Rename new column
+data_2023 = data_2023.rename(columns={'2023': 'gdp_2023'})
+```
+
+```{python}
+# Merge '2023' column from development dataframe into data_2023 dataframe by country code
+data_2023 = pd.merge(
+    data_2023,
+    development[['country_code', '2023']],
+    on='country_code',
+    how='inner',  # keep only rows with matching country_code in both dataframes
+    suffixes=('', '_dev')
+)
+
+# Rename new column 
+data_2023 = data_2023.rename(columns={'2023': 'development_2023'})
+```
+
+```{python}
+# Merge '2023' column from gini dataframe into data_2023 dataframe by country code
+data_2023 = pd.merge(
+    data_2023,
+    gini[['country_code', '2023']],
+    on='country_code',
+    how='inner',  # keep only rows with matching country_code in both dataframes
+    suffixes=('', '_gini')
+)
+
+# Rename new column 
+data_2023 = data_2023.rename(columns={'2023': 'gini_2023'})
+```
+
+```{python}
+# Merge '2023' column from corruption dataframe into data_2023 dataframe by country code
+data_2023 = pd.merge(
+    data_2023,
+    corruption[['country_code', '2023']],
+    on='country_code',
+    how='inner',  # keep only rows with matching country_code in both dataframes
+    suffixes=('', '_corruption')
+)
+
+# Rename new column 
+data_2023 = data_2023.rename(columns={'2023': 'corruption_2023'})
+```
+
+
+```{python}
+# Cleanup non-numeric values
+for col in ['happiness_2023', 'gdp_2023', 'development_2023', 'gini_2023', 'corruption_2023']:
+    data_2023[col] = data_2023[col].astype(str)
+    data_2023[col] = data_2023[col].apply(
+        lambda x: float(x.replace('k', '')) * 1000 if 'k' in x else x
+    )
+    data_2023[col] = pd.to_numeric(data_2023[col], errors='coerce')
+```
+
+
+```{python}
+# Cleanup non-numeric values
+for col in ['happiness_2023', 'gdp_2023', 'development_2023', 'gini_2023', 'corruption_2023']:
+    data_2023[col] = pd.to_numeric(data_2023[col], errors='coerce')
+```
+
+
+```{python}
+# Cleanup numeric values
+for col in ['happiness_2023', 'gdp_2023', 'development_2023', 'gini_2023', 'corruption_2023']:
+    data_2023[col] = data_2023[col].dropna().astype(float)
+```
+
+
+```{python}
+# Cleanup numeric values
+data_2023 = data_2023.dropna(subset=['happiness_2023'])
+```
+
+
+# Happiness 
+
+Happiness is a complex emotion of general positive feelings, such as joy and contentment. Many psychological studies have correlated happiness with good health, purpose and overall life satisfaction. However, how much of one's happiness is influenced by where they live? Despite being difficult to quantify, the Cantril life ladder aims to do this with a score from 0 to 100, with 100 being the most happy and 0 being the least. 
+
+This study aims to explore the corelation between happiness and common metrics of a well-run country in 2023.
+
+```{python}
+# Plot a world map of happiness_2023
+fig = px.choropleth(
+    data_2023,
     locations="country_code",
-    color="emissions",
+    color="happiness_2023",
     hover_name="country",
-    animation_frame="year",
-    title="Global CO2 Emissions (1990-2022)",
+    color_continuous_scale=["white", "green"],
+    projection="natural earth",
+    title="World Happiness Score 2023"
 )
-
-fig_map.show()
+fig.show()
 ```
-
-
-# Final Tabset
-
-Below, we place our results into a tabbed interface.
-
-::: {.panel-tabset}
-
-## Table
 
 ```{python}
-show(table_df)
-```
+# Create a table with top 5 and bottom 5 countries based on happiness_2023 value, sorted descending
+top_5 = data_2023.nlargest(5, 'happiness_2023')
+bottom_5 = data_2023.nsmallest(5, 'happiness_2023')
+top_bottom_5 = pd.concat([top_5, bottom_5]).sort_values(by='happiness_2023', ascending=False)
 
-## Chart
+```
 
 ```{python}
-fig_chart.show()
+# Create a table from top_bottom_5 with relevant columns
+top_bottom_5_table = top_bottom_5[['country', 'country_code', 'happiness_2023']].rename(
+    columns={
+        'country_code': 'Country Code',
+        'happiness_2023': 'Happiness Score (2023)'
+    }
+)
+top_bottom_5_table
 ```
 
-## Map
+# Happiness x GDP
+The economic health of a country can be measured with its gross domestic profit (GDP) per capita ($USD). This measures the amount of economic activity generated in a year divided by its population.
 
+## Row {height="50%"}
 ```{python}
-fig_map.show()
+# Plot a world map of gdp_2023 
+fig = px.choropleth(
+    data_2023,
+    locations="country_code",
+    color="gdp_2023",
+    hover_name="country",
+    color_continuous_scale=["white", "red"],
+    projection="natural earth",
+    title="World GDP per Capita 2023"
+)
+fig.show()
 ```
 
-:::
+## Row {height="50%"}
+```{python}
+# Plot scatter plot of happiness_2023 vs gdp_2023
+fig = px.scatter(
+    data_2023,
+    x="happiness_2023",
+    y="gdp_2023",
+    hover_name="country",
+    title="Happiness vs GDP per Capita (2023)",
+    labels={"happiness_2023": "Happiness Score (2023)", "gdp_2023": "GDP per Capita (2023)"}
+)
+fig.show()
+```
 
-# Deploying to GitHub Pages
+# Top and Bottom 5 Countries
 
-As a final step, you should follow the steps outlined in the prework to deplioy your report to GitHub Pages. You will be asked to share a link to your report in the course portal
+## Row {height="90%"}
+```{python}
+# Plot bar graph of top and bottom 5 countries
+fig = px.bar(
+    top_bottom_5,
+    x="country",
+    y="happiness_2023",
+    color="gdp_2023",
+    hover_data={"gdp_2023": True},
+    color_continuous_scale=["white", "green"],
+    title="Happiness of Top 5 and Botton 5 Countries in 2023, colored by GDP per Capita (2023)"
+)
+fig.update_layout(
+    showlegend=True,
+    xaxis_title=" ",
+    yaxis_title="Happiness Score (2023)",
+    yaxis_title_font=dict(size=14),
+    yaxis_title_standoff=10,
+    margin=dict(l=0, r=0),
+    xaxis_tickangle=10,
+    font=dict(size=10),
+)
+```
+
+## Row {height="10%"}
+ We can see here a correlation between GDP/capita and happiness, concentrated in North America, Europe and Oceana. However, this is not always correlated, since Costa Rica is one of the happiess countries yet with a lower GDP/capita, so we must investigate beyond this metric. 
+
+# Happiness x Inequality
+
+## Row {height="10%"}
+The Gini coefficient reprersents income inequality in a society, with a higher number being more inequality. We can see here patterns with lower inequality correlate with happiness. 
+
+## Row {height="90%"}
+```{python}
+# Plot scatter plot of happiness_2023 vs gini_2023
+fig = px.scatter(
+    data_2023,
+    x="happiness_2023",
+    y="gini_2023",
+    hover_name="country",
+    title="Happiness vs Income Inequality (Gini) in 2023",
+    labels={"happiness_2023": "Happiness Score (2023)", "gini_2023": "Gini Index (2023)"}
+)
+fig.show()
+```
+
+# Happiness x Development
+
+## Row {height="10%"}
+Human Development Index is an index used to rank countries by level of "human development". It contains three dimensions: health level, educational level and living standard. We can see here patters with higher development correlate with happiness.
+
+## Row {height="90%"}
+```{python}
+# Plot scatter plot of happiness_2023 vs development_2023
+fig = px.scatter(
+    data_2023,
+    x="happiness_2023",
+    y="development_2023",
+    hover_name="country",
+    title="Happiness vs Human Development Index (2023)",
+    labels={"happiness_2023": "Happiness Score (2023)", "development_2023": "Human Development Index (2023)"}
+)
+fig.show()
+```
+
+# Happiness x Political Stability
+
+## Row {height="20%"}
+Lastly, the integrity of those in power can greatly determine how a country is run. The corruption perception index ranks countries/territories based on how corrupt their public sector is perceived to be from 0 to 100, in which 0 is highly corrupt and 100 is very clean. We see a strong pattern between happiness and less corruption. The size of each data point represents GDP/capita, which also correlates with happiness. 
+
+## Row {height="80%"}
+```{python}
+# Plot scatter plot of happiness_2023 vs corruption_2023 by gdp_2023
+fig = px.scatter(
+    data_2023,
+    x="happiness_2023",
+    y="corruption_2023",
+    size="gdp_2023",
+    hover_name="country",
+    title="Happiness vs Corruption Perception Index vs GDP per capita (2023)",
+    labels={
+        "happiness_2023": "Happiness Score (2023)",
+        "corruption_2023": "Corruption Perception Index (2023)",
+        "gdp_2023": "GDP per Capita (2023)"
+    },
+    hover_data={"gdp_2023": True}
+)
+fig.show()
+```

@@ -1,0 +1,360 @@
+---
+title: "What is the correlation between happiness and a well-run country?"
+format: dashboard
+theme: lux
+author: Priscilla Wang
+---
+
+```{python}
+import pandas as pd
+import numpy as np
+import plotly.express as px
+from itables import show
+import country_converter as coco
+```
+
+
+```{python}
+happiness = pd.read_csv("../data_final_project/hapiscore_whr.csv")
+```
+
+
+```{python}
+gdp = pd.read_csv("../data_final_project/gdppercapita_us_inflation_adjusted.csv")
+
+```
+
+
+```{python}
+development = pd.read_csv("../data_final_project/hdi_human_development_index.csv")
+
+
+```
+
+
+```{python}
+gini = pd.read_csv("../data_final_project/gini.csv")
+
+```
+
+
+```{python}
+corruption = pd.read_csv("../data_final_project/corruption_perception_index_cpi.csv")
+
+```
+
+
+
+```{python}
+# Convert country names to ISO3 codes using coco
+happiness['country_code'] = coco.convert(names=happiness['country'], to='ISO3', not_found=None)
+
+# Manually fix UAE (United Arab Emirates)
+happiness.loc[happiness['country'] == 'UAE', 'country_code'] = 'ARE'
+
+
+```
+
+```{python}
+# Find countries where country_code was not found
+#missing_codes = happiness[happiness['country_code'].isnull()]
+#print("Countries with missing ISO3 codes:")
+#print(missing_codes['country'].unique())
+```
+
+```{python}
+# Convert country names to ISO3 codes using coco
+gdp['country_code'] = coco.convert(names=gdp['country'], to='ISO3', not_found=None)
+
+# Manually fix UAE (United Arab Emirates)
+gdp.loc[gdp['country'] == 'UAE', 'country_code'] = 'ARE'
+
+
+```
+
+```{python}
+# Find countries where country_code was not found
+#missing_codes = gdp[gdp['country_code'].isnull()]
+#print("Countries with missing ISO3 codes:")
+#print(missing_codes['country'].unique())
+```
+
+```{python}
+# Convert country names to ISO3 codes using coco
+development['country_code'] = coco.convert(names=development['country'], to='ISO3', not_found=None)
+
+# Manually fix UAE (United Arab Emirates)
+development.loc[gdp['country'] == 'UAE', 'country_code'] = 'ARE'
+```
+
+```{python}
+# Find countries where country_code was not found
+#missing_codes = development[development['country_code'].isnull()]
+#print("Countries with missing ISO3 codes:")
+#print(missing_codes['country'].unique())
+```
+
+```{python}
+# Convert country names to ISO3 codes using coco
+gini['country_code'] = coco.convert(names=gini['country'], to='ISO3', not_found=None)
+
+# Manually fix UAE (United Arab Emirates)
+gini.loc[gdp['country'] == 'UAE', 'country_code'] = 'ARE'
+```
+
+```{python}
+# Find countries where country_code was not found
+#missing_codes = gini[gini['country_code'].isnull()]
+#print("Countries with missing ISO3 codes:")
+#print(missing_codes['country'].unique())
+```
+
+```{python}
+# Convert country names to ISO3 codes using coco
+corruption['country_code'] = coco.convert(names=corruption['country'], to='ISO3', not_found=None)
+
+# Manually fix UAE (United Arab Emirates)
+corruption.loc[corruption['country'] == 'UAE', 'country_code'] = 'ARE'
+```
+
+```{python}
+# Find countries where country_code was not found
+#missing_codes = corruption[corruption['country_code'].isnull()]
+#print("Countries with missing ISO3 codes:")
+#print(missing_codes['country'].unique())
+```
+
+
+```{python}
+# Create a new dataframe with country_code, country, and 2023 columns from happiness
+data_2023 = happiness[['country_code', 'country', '2023']].copy()
+
+# rename column to hapiness_2023
+data_2023 = data_2023.rename(columns={'2023': 'happiness_2023'})
+```
+
+```{python}
+# Merge '2023' column from gdp into data_2023 by country_code
+data_2023 = pd.merge(
+    data_2023,
+    gdp[['country_code', '2023']],
+    on='country_code',
+    how='inner',  # keep only rows with matching country_code in both dataframes
+    suffixes=('', '_gdp')
+)
+
+# Rename the new column for clarity
+data_2023 = data_2023.rename(columns={'2023': 'gdp_2023'})
+```
+
+```{python}
+# Merge '2023' column from development into data_2023 by country_code
+data_2023 = pd.merge(
+    data_2023,
+    development[['country_code', '2023']],
+    on='country_code',
+    how='inner',  # keep only rows with matching country_code in both dataframes
+    suffixes=('', '_dev')
+)
+
+# Rename the new column for clarity
+data_2023 = data_2023.rename(columns={'2023': 'development_2023'})
+```
+
+```{python}
+# Merge '2023' column from gini into data_2023 by country_code
+data_2023 = pd.merge(
+    data_2023,
+    gini[['country_code', '2023']],
+    on='country_code',
+    how='inner',  # keep only rows with matching country_code in both dataframes
+    suffixes=('', '_gini')
+)
+
+# Rename the new column for clarity
+data_2023 = data_2023.rename(columns={'2023': 'gini_2023'})
+```
+
+```{python}
+# Merge '2023' column from corruption into data_2023 by country_code
+data_2023 = pd.merge(
+    data_2023,
+    corruption[['country_code', '2023']],
+    on='country_code',
+    how='inner',  # keep only rows with matching country_code in both dataframes
+    suffixes=('', '_corruption')
+)
+
+# Rename the new column for clarity
+data_2023 = data_2023.rename(columns={'2023': 'corruption_2023'})
+```
+
+
+```{python}
+# For all columns, if value contains 'k', remove 'k' and multiply the number by 1000
+for col in ['happiness_2023', 'gdp_2023', 'development_2023', 'gini_2023', 'corruption_2023']:
+    data_2023[col] = data_2023[col].astype(str)
+    data_2023[col] = data_2023[col].apply(
+        lambda x: float(x.replace('k', '')) * 1000 if 'k' in x else x
+    )
+    data_2023[col] = pd.to_numeric(data_2023[col], errors='coerce')
+```
+
+
+```{python}
+# Change all non-number values to NaN in data_2023
+for col in ['happiness_2023', 'gdp_2023', 'development_2023', 'gini_2023', 'corruption_2023']:
+    data_2023[col] = pd.to_numeric(data_2023[col], errors='coerce')
+```
+
+
+```{python}
+# Change all values to int type in data_2023
+for col in ['happiness_2023', 'gdp_2023', 'development_2023', 'gini_2023', 'corruption_2023']:
+    data_2023[col] = data_2023[col].dropna().astype(float)
+```
+
+
+```{python}
+# Delete any rows with NaN values in column happiness_2023
+data_2023 = data_2023.dropna(subset=['happiness_2023'])
+```
+
+
+# Page 1: Happiness 
+[text box: what is happiness and how it is scored]
+
+
+```{python}
+# Plot a world map of happiness_2023 using Plotly Express with white to green color scale
+fig = px.choropleth(
+    data_2023,
+    locations="country_code",
+    color="happiness_2023",
+    hover_name="country",
+    color_continuous_scale=["white", "green"],
+    projection="natural earth",
+    title="World Happiness Score 2023"
+)
+fig.show()
+```
+
+```{python}
+# Create a table with top 5 and bottom 5 countries based on happiness_2023 value, sorted descending
+top_5 = data_2023.nlargest(5, 'happiness_2023')
+bottom_5 = data_2023.nsmallest(5, 'happiness_2023')
+top_bottom_5 = pd.concat([top_5, bottom_5]).sort_values(by='happiness_2023', ascending=False)
+top_bottom_5
+```
+
+# Page 2: Happiness x Economy
+[text box of introduction]
+
+```{python}
+# Plot a world map of gdp_2023 using Plotly Express with white to green color scale
+fig = px.choropleth(
+    data_2023,
+    locations="country_code",
+    color="gdp_2023",
+    hover_name="country",
+    color_continuous_scale=["white", "green"],
+    projection="natural earth",
+    title="World GDP per Capita 2023"
+)
+fig.show()
+```
+
+```{python}
+# Plot an interactive scatter plot: happiness_2023 (x) vs gdp_2023 (y), hover shows country
+fig = px.scatter(
+    data_2023,
+    x="happiness_2023",
+    y="gdp_2023",
+    hover_name="country",
+    title="Happiness vs GDP per Capita (2023)",
+    labels={"happiness_2023": "Happiness Score (2023)", "gdp_2023": "GDP per Capita (2023)"}
+)
+fig.show()
+```
+
+```{python}
+# Bar chart of top_bottom_5: country on x-axis, gdp_2023 on y-axis, hover shows happiness_2023, color by happiness_2023
+fig = px.bar(
+    top_bottom_5,
+    x="country",
+    y="gdp_2023",
+    color="happiness_2023",
+    hover_data={"happiness_2023": True},
+    title="GDP per Capita of Top 5 and Bottom 5 Happiness Countries (2023)",
+    labels={
+        "gdp_2023": "GDP per Capita (2023)",
+        "country": "Country",
+        "happiness_2023": "Happiness Score (2023)"
+    },
+    color_continuous_scale=["white", "green"],
+    height=600,
+    width=1000
+)
+fig.update_layout(
+    xaxis_title="Country",
+    yaxis_title="GDP per Capita (2023)",
+    font=dict(size=16)
+)
+```
+
+[text box of summary - not always correlated so we can investigate further]
+
+# Page 3: Happiness x Society
+[text box of intro]
+
+```{python}
+# Plot an interactive scatter plot: happiness_2023 (x) vs gini_2023 (y), hover shows country
+fig = px.scatter(
+    data_2023,
+    x="happiness_2023",
+    y="gini_2023",
+    hover_name="country",
+    title="Happiness vs Income Inequality (Gini) in 2023",
+    labels={"happiness_2023": "Happiness Score (2023)", "gini_2023": "Gini Index (2023)"}
+)
+fig.show()
+```
+
+```{python}
+# Plot an interactive scatter plot: happiness_2023 (x) vs development_2023 (y), hover shows country
+fig = px.scatter(
+    data_2023,
+    x="happiness_2023",
+    y="development_2023",
+    hover_name="country",
+    title="Happiness vs Human Development Index (2023)",
+    labels={"happiness_2023": "Happiness Score (2023)", "development_2023": "Human Development Index (2023)"}
+)
+fig.show()
+```
+
+[text box of summary]
+
+# Page 4: Happiness x Politics
+[text box of intro]
+
+```{python}
+# Plot an interactive scatter plot: happiness_2023 (x) vs corruption_2023 (y), hover shows country, marker size by gdp_2023
+fig = px.scatter(
+    data_2023,
+    x="happiness_2023",
+    y="corruption_2023",
+    size="gdp_2023",
+    hover_name="country",
+    title="Happiness vs Corruption Perception Index vs GDP per capita (2023)",
+    labels={
+        "happiness_2023": "Happiness Score (2023)",
+        "corruption_2023": "Corruption Perception Index (2023)",
+        "gdp_2023": "GDP per Capita (2023)"
+    },
+    hover_data={"gdp_2023": True}
+)
+fig.show()
+```
+
+[text box of summary]
