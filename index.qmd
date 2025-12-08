@@ -84,13 +84,13 @@ Our goal is to create a table showing emissions for a few selected years and cal
 
 ```{python}
 # Subset the data to include `country`, `2000`, and `2022` columns only.
-table_df = emissions[["country","2000","2022"]]
+table_df = emissions[["country", "2000", "2022"]]
 
 # Calculate absolute change as the difference between 2022 and 2000
-table_df["Absolute Change"] = 
+table_df["Absolute Change"] = table_df["2022"] - table_df["2000"]
 
 # Calculate relative change as the absolute change divided by the 2000 emissions, then multiplied by 100
-table_df["Relative Change"] = 
+table_df["Relative Change"] = table_df["Absolute Change"] / table_df["2000"] * 100
 
 # Round to 0 decimal places, and add a % sign to the relative change
 table_df["Relative Change"] = table_df["Relative Change"].round(0).astype(str) + "%"
