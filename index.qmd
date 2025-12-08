@@ -14,10 +14,10 @@ Be sure to view that page to get an idea of the final product.
 # Setup
 
 - You should have forked and cloned this repository to your local machine.
-
+>
 - Now, create and select a virtual environment in VSCode.
 
-- Install the following packages: 
+- Install the following packages
   - pandas
   - plotly
   - itables
@@ -43,7 +43,8 @@ Load in your dataset from gapminder below. View it in your data viewer to get an
 
 ```{python}
 # Load the data
-emissions = pd.read_csv("DATA PATH HERE")
+emissions = pd.read_csv("co2_cons.csv")
+
 ```
 
 # Initial Cleaning
@@ -83,7 +84,7 @@ Our goal is to create a table showing emissions for a few selected years and cal
 
 ```{python}
 # Subset the data to include `country`, `2000`, and `2022` columns only.
-table_df = 
+table_df = emissions[["country","2000","2022"]]
 
 # Calculate absolute change as the difference between 2022 and 2000
 table_df["Absolute Change"] = 
