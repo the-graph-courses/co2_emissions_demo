@@ -161,4 +161,19 @@ fig_map.show()
 
 # Deploying to GitHub Pages
 
-As a final step, you should follow the steps outlined in the prework to deplioy your report to GitHub Pages. You will be asked to share a link to your report in the course portal
+As a final step, you should follow the steps outlined in the prework to deploy your report to GitHub Pages. You will be asked to share a link to your report in the course portal.
+
+GitHub Pages shows `index.html` as the main page of your site. Quarto creates `index.html` from `index.qmd`.
+
+## Optional Ungraded challenge
+
+Right now, `index.qmd` contains workshop instructions and practice code. That is useful while you work, but it does not look like a finished report.
+
+To make a cleaner report for your website:
+
+1. Copy the instructions into a new file, such as `instructions.qmd`.
+2. Edit `index.qmd` so it mainly contains your analysis code and the final table, chart, and map.
+3. Add a clear title (and your name, if you want) in the YAML header at the top.
+4. Add `#| echo: false` to code chunks if you want to hide the code and show only the output.
+
+Your published page should be easy to read: mainly the results, not the workshop instructions.
